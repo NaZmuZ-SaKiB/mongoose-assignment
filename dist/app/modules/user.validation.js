@@ -26,5 +26,5 @@ exports.userValidationSchema = zod_1.z.object({
     address: exports.addressValidationSchema,
     password: zod_1.z.string().min(6),
     isActive: zod_1.z.boolean(),
-    orders: zod_1.z.array(exports.orderValidationSchema),
+    orders: zod_1.z.array(exports.orderValidationSchema).optional(),
 });

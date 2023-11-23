@@ -29,3 +29,6 @@ export const userValidationSchema = z.object({
   isActive: z.boolean(),
   orders: z.array(orderValidationSchema).optional(),
 });
+
+// Update validation
+export const userUpdateValidationSchema = userValidationSchema.partial();

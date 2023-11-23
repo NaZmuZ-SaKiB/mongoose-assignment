@@ -30,6 +30,8 @@ export type TUser = {
   orders?: TOrder[];
 };
 
+export type TUpdateUser = Partial<TUser>;
+
 export interface UserModel extends Model<TUser> {
   userExists(userId: number): Promise<TUser | null>;
 }

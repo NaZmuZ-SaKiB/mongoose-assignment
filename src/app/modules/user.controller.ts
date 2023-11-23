@@ -3,7 +3,10 @@ import { fromZodError } from 'zod-validation-error';
 
 import { UserServices } from './user.service';
 import { TUser } from './user.interface';
-import { userValidationSchema } from './user.validation';
+import {
+  userUpdateValidationSchema,
+  userValidationSchema,
+} from './user.validation';
 
 const createUser = async (req: Request, res: Response) => {
   try {
@@ -15,12 +18,10 @@ const createUser = async (req: Request, res: Response) => {
       res.status(500).json({
         success: false,
         message: `${err.details[0].path} : ${err.details[0].message}`,
-        error: err,
+        error: 'Validation Error!',
       });
     } else {
       const response = await UserServices.postUserToDB(zodParse.data);
-      // const data = {...response}  as Partial<TUser>;
-      // delete data.password
 
       res.status(200).json({
         success: true,
@@ -32,6 +33,51 @@ const createUser = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to create user!',
+      error,
+    });
+  }
+};
+
+const updateUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const userData: TUser = req.body;
+
+    const zodParse = userUpdateValidationSchema.safeParse(userData);
+    if (!zodParse.success) {
+      const err = fromZodError(zodParse.error);
+      res.status(500).json({
+        success: false,
+        message: `${err.details[0].path} : ${err.details[0].message}`,
+        error: 'Validation Error!',
+      });
+    } else {
+      const response = await UserServices.updateUserInDB(
+        Number(userId),
+        zodParse.data,
+      );
+
+      if (response) {
+        res.status(200).json({
+          success: true,
+          message: 'User updated successfully!',
+          data: response,
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+          error: {
+            code: 404,
+            description: 'User not found!',
+          },
+        });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Could not update user!',
       error,
     });
   }
@@ -59,7 +105,7 @@ const getUserByID = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
 
-    const response = await UserServices.getUserByIDFromDB(Number(userId));
+    const response: any = await UserServices.getUserByIDFromDB(Number(userId));
     if (response) {
       const { orders, password, _id, ...data } = response?._doc;
 
@@ -91,4 +137,5 @@ export const UserControllers = {
   createUser,
   getAllUsers,
   getUserByID,
+  updateUser,
 };

@@ -117,4 +117,11 @@ userSchema.pre('save', function (next) {
         next();
     });
 });
+// Static Method
+userSchema.statics.userExists = function (userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existingUser = yield exports.User.findOne({ userId });
+        return existingUser;
+    });
+};
 exports.User = (0, mongoose_1.model)('User', userSchema);
