@@ -12,6 +12,6 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 // Application Routes
 app.get('/', (req, res) => {
-    res.send('Welcome to mongoose assignment server');
+    res.send('Welcome to mongoose assignment server !');
 });
 exports.default = app;

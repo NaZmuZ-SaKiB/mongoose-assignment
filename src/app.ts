@@ -2,6 +2,7 @@ import express, { Request, Response, Application } from 'express';
 import cors from 'cors';
 
 // Local Imports
+import userRouter from './app/modules/user.route';
 
 const app: Application = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 // Application Routes
+app.use('/api/users', userRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to mongoose assignment server !');

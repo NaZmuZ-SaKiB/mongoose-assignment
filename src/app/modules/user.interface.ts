@@ -9,6 +9,12 @@ export type TAddress = {
   country: string;
 };
 
+export type TOrder = {
+  productName: string;
+  price: number;
+  quantity: number;
+};
+
 export type TUser = {
   userId: number;
   username: string;
@@ -17,6 +23,7 @@ export type TUser = {
   age: number;
   email: string;
   isActive: boolean;
-  hibbies: string[];
+  hobbies: string[];
   address: TAddress;
+  orders: TOrder[];
 };
