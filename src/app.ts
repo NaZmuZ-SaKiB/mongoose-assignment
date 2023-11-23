@@ -12,7 +12,7 @@ app.use(cors());
 // Application Routes
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Welcome to mongoose assignment server');
+  res.send('Welcome to mongoose assignment server !');
 });
 
 export default app;
