@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 
-import { TAddress, TName, TOrder, TUser } from './user.interface';
+import { TAddress, TName, TOrder, TUser, UserModel } from './user.interface';
 import config from '../config';
 
 const nameSchema = new Schema<TName>({
@@ -51,7 +51,7 @@ const orderSchema = new Schema<TOrder>({
   },
 });
 
-const userSchema = new Schema<TUser>(
+const userSchema = new Schema<TUser, UserModel>(
   {
     userId: {
       type: Number,
@@ -114,4 +114,10 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-export const User = model<TUser>('User', userSchema);
+// Static Method
+userSchema.statics.userExists = async function (userId: number) {
+  const existingUser = await User.findOne({ userId });
+  return existingUser;
+};
+
+export const User = model<TUser, UserModel>('User', userSchema);

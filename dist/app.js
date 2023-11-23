@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 // Local Imports
+const user_route_1 = __importDefault(require("./app/modules/user.route"));
 const app = (0, express_1.default)();
 // Parsers
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 // Application Routes
+app.use('/api/users', user_route_1.default);
 app.get('/', (req, res) => {
     res.send('Welcome to mongoose assignment server !');
 });

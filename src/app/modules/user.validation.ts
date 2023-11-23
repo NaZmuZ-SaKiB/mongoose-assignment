@@ -27,5 +27,5 @@ export const userValidationSchema = z.object({
   address: addressValidationSchema,
   password: z.string().min(6),
   isActive: z.boolean(),
-  orders: z.array(orderValidationSchema),
+  orders: z.array(orderValidationSchema).optional(),
 });
