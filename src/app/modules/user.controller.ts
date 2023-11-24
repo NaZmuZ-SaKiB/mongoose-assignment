@@ -82,7 +82,7 @@ const getAllUsers = async (req: Request, res: Response) => {
 
 const getUserByID = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params?.userId;
 
     const response: any = await UserServices.getUserByIDFromDB(Number(userId));
     if (response) {
@@ -117,7 +117,7 @@ const getUserByID = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params?.userId;
     const userData: TUpdateUser = req.body;
 
     const zodParse = userUpdateValidationSchema.safeParse(userData);
@@ -168,7 +168,7 @@ const updateUser = async (req: Request, res: Response) => {
 
 const deleteUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params?.userId;
     const response = await UserServices.deleteUserFromDB(Number(userId));
     if (response?.deletedCount === 1) {
       res.json({
@@ -200,7 +200,7 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const createOrder = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params?.userId;
     const orderData: TOrder = req.body;
 
     const zodParse = orderValidationSchema.safeParse(orderData);
@@ -251,7 +251,7 @@ const createOrder = async (req: Request, res: Response) => {
 
 const getAllOrdersOfUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params?.userId;
     const response = await UserServices.getAllOrdersOfUserFromDB(
       Number(userId),
     );
@@ -288,7 +288,7 @@ const getAllOrdersOfUser = async (req: Request, res: Response) => {
 const getUsersTotalOrderPrice = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
-    const response = await UserServices.getUsersTotalOrderPriceFromDB(
+    const response = await UserServices.getAllOrdersOfUserFromDB(
       Number(userId),
     );
 
