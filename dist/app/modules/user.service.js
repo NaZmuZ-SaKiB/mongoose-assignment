@@ -15,6 +15,25 @@ const postUserToDB = (userData) => __awaiter(void 0, void 0, void 0, function* (
     const user = yield user_model_1.User.create(userData);
     return user;
 });
+const updateUserInDB = (userId, userData) => __awaiter(void 0, void 0, void 0, function* () {
+    if (isNaN(userId))
+        return null;
+    const userExists = yield user_model_1.User.userExists(userId);
+    if (!userExists)
+        return null;
+    const res = yield user_model_1.User.findOneAndUpdate({ userId }, { $set: userData }, { new: true, runValidators: true }).select({
+        userId: 1,
+        username: 1,
+        fullName: 1,
+        age: 1,
+        email: 1,
+        isActive: 1,
+        hobbies: 1,
+        address: 1,
+        _id: 0,
+    });
+    return res;
+});
 const getAllUsersFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield user_model_1.User.find({}).select({
         username: 1,
@@ -36,4 +55,5 @@ exports.UserServices = {
     postUserToDB,
     getAllUsersFromDB,
     getUserByIDFromDB,
+    updateUserInDB,
 };

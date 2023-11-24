@@ -33,13 +33,11 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.status(500).json({
                 success: false,
                 message: `${err.details[0].path} : ${err.details[0].message}`,
-                error: err,
+                error: 'Validation Error!',
             });
         }
         else {
             const response = yield user_service_1.UserServices.postUserToDB(zodParse.data);
-            // const data = {...response}  as Partial<TUser>;
-            // delete data.password
             res.status(200).json({
                 success: true,
                 message: 'User created successfully!',
@@ -51,6 +49,48 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(500).json({
             success: false,
             message: 'Failed to create user!',
+            error,
+        });
+    }
+});
+const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.params.userId;
+        const userData = req.body;
+        const zodParse = user_validation_1.userUpdateValidationSchema.safeParse(userData);
+        if (!zodParse.success) {
+            const err = (0, zod_validation_error_1.fromZodError)(zodParse.error);
+            res.status(500).json({
+                success: false,
+                message: `${err.details[0].path} : ${err.details[0].message}`,
+                error: 'Validation Error!',
+            });
+        }
+        else {
+            const response = yield user_service_1.UserServices.updateUserInDB(Number(userId), zodParse.data);
+            if (response) {
+                res.status(200).json({
+                    success: true,
+                    message: 'User updated successfully!',
+                    data: response,
+                });
+            }
+            else {
+                res.status(404).json({
+                    success: false,
+                    message: 'User not found',
+                    error: {
+                        code: 404,
+                        description: 'User not found!',
+                    },
+                });
+            }
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Could not update user!',
             error,
         });
     }
@@ -107,4 +147,5 @@ exports.UserControllers = {
     createUser,
     getAllUsers,
     getUserByID,
+    updateUser,
 };

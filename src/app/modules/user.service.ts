@@ -48,9 +48,19 @@ const getUserByIDFromDB = async (userId: number) => {
   const user = await User.userExists(userId);
   return user;
 };
+
+const deleteUserFromDB = async (userId: number) => {
+  if (isNaN(userId)) return null;
+  const user = await User.userExists(userId);
+  if (!user) return null;
+  const response = await User.deleteOne({ userId });
+  return response;
+};
+
 export const UserServices = {
   postUserToDB,
   getAllUsersFromDB,
   getUserByIDFromDB,
   updateUserInDB,
+  deleteUserFromDB,
 };
