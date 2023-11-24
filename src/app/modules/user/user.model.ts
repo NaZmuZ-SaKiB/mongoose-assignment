@@ -2,54 +2,69 @@ import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 
 import { TAddress, TName, TOrder, TUser, UserModel } from './user.interface';
-import config from '../config';
+import config from '../../config';
 
-const nameSchema = new Schema<TName>({
-  firstName: {
-    type: String,
-    required: [true, 'First Name is required.'],
-    trim: true,
+const nameSchema = new Schema<TName>(
+  {
+    firstName: {
+      type: String,
+      required: [true, 'First Name is required.'],
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: [true, 'Last Name is required.'],
+      trim: true,
+    },
   },
-  lastName: {
-    type: String,
-    required: [true, 'Last Name is required.'],
-    trim: true,
+  {
+    _id: false,
   },
-});
+);
 
-const addressSchema = new Schema<TAddress>({
-  city: {
-    type: String,
-    required: [true, 'City is required.'],
-    trim: true,
+const addressSchema = new Schema<TAddress>(
+  {
+    city: {
+      type: String,
+      required: [true, 'City is required.'],
+      trim: true,
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required.'],
+      trim: true,
+    },
+    street: {
+      type: String,
+      required: [true, 'Street Address is required.'],
+      trim: true,
+    },
   },
-  country: {
-    type: String,
-    required: [true, 'Country is required.'],
-    trim: true,
+  {
+    _id: false,
   },
-  street: {
-    type: String,
-    required: [true, 'Street Address is required.'],
-    trim: true,
-  },
-});
+);
 
-const orderSchema = new Schema<TOrder>({
-  productName: {
-    type: String,
-    required: [true, 'Product name is required.'],
-    trim: true,
+const orderSchema = new Schema<TOrder>(
+  {
+    productName: {
+      type: String,
+      required: [true, 'Product name is required.'],
+      trim: true,
+    },
+    price: {
+      type: Number,
+      required: [true, 'Price is required.'],
+    },
+    quantity: {
+      type: Number,
+      required: [true, 'Quantity is required.'],
+    },
   },
-  price: {
-    type: Number,
-    required: [true, 'Price is required.'],
+  {
+    _id: false,
   },
-  quantity: {
-    type: Number,
-    required: [true, 'Quantity is required.'],
-  },
-});
+);
 
 const userSchema = new Schema<TUser, UserModel>(
   {

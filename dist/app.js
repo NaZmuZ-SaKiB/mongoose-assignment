@@ -16,4 +16,14 @@ app.use('/api/users', user_route_1.default);
 app.get('/', (req, res) => {
     res.send('Welcome to mongoose assignment server !');
 });
+app.all('*', (req, res) => {
+    res.status(400).json({
+        success: false,
+        message: 'Route Not Found!',
+        error: {
+            code: 404,
+            description: `The route ${req.originalUrl} does not exist`,
+        },
+    });
+});
 exports.default = app;

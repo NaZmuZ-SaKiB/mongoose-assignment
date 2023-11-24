@@ -8,32 +8,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserControllers = void 0;
 const zod_validation_error_1 = require("zod-validation-error");
 const user_service_1 = require("./user.service");
 const user_validation_1 = require("./user.validation");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const user = req.body;
         const zodParse = user_validation_1.userValidationSchema.safeParse(user);
         if (!zodParse.success) {
             const err = (0, zod_validation_error_1.fromZodError)(zodParse.error);
-            res.status(500).json({
+            res.status(403).json({
                 success: false,
-                message: `${err.details[0].path} : ${err.details[0].message}`,
-                error: 'Validation Error!',
+                message: 'Validation Error!',
+                error: {
+                    code: 403,
+                    description: `${err.details[0].path} : ${err.details[0].message}`,
+                },
             });
         }
         else {
@@ -46,24 +39,99 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
     }
     catch (error) {
+        if (error.code === 11000) {
+            res.status(500).json({
+                success: false,
+                message: `${Object.keys(error.keyPattern)[0]} must be unique.`,
+                error: {
+                    code: 500,
+                    description: `${Object.keys(error.keyPattern)[0]} : ${Object.values(error.keyValue)[0]} already exists.`,
+                },
+            });
+        }
+        else {
+            res.status(500).json({
+                success: false,
+                message: 'Internal Server Error.',
+                error: {
+                    code: 500,
+                    description: (_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : 'There was an error creating new user.',
+                },
+            });
+        }
+    }
+});
+const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    try {
+        const response = yield user_service_1.UserServices.getAllUsersFromDB();
+        res.status(200).json({
+            success: true,
+            message: 'Users fetched successfully!',
+            data: response,
+        });
+    }
+    catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Failed to create user!',
-            error,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_b = error === null || error === void 0 ? void 0 : error.message) !== null && _b !== void 0 ? _b : 'There was an error fetching users.',
+            },
+        });
+    }
+});
+const getUserByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _c, _d;
+    try {
+        const userId = (_c = req.params) === null || _c === void 0 ? void 0 : _c.userId;
+        const response = yield user_service_1.UserServices.getUserByIDFromDB(Number(userId));
+        if (response) {
+            response === null || response === void 0 ? true : delete response._doc.orders;
+            res.status(200).json({
+                success: true,
+                message: 'User fetched successfully!',
+                data: response,
+            });
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'User not found',
+                error: {
+                    code: 404,
+                    description: 'User not found!',
+                },
+            });
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_d = error === null || error === void 0 ? void 0 : error.message) !== null && _d !== void 0 ? _d : 'There was an error fetching user.',
+            },
         });
     }
 });
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _e, _f;
     try {
-        const userId = req.params.userId;
+        const userId = (_e = req.params) === null || _e === void 0 ? void 0 : _e.userId;
         const userData = req.body;
         const zodParse = user_validation_1.userUpdateValidationSchema.safeParse(userData);
         if (!zodParse.success) {
             const err = (0, zod_validation_error_1.fromZodError)(zodParse.error);
-            res.status(500).json({
+            res.status(403).json({
                 success: false,
-                message: `${err.details[0].path} : ${err.details[0].message}`,
-                error: 'Validation Error!',
+                message: 'Validation Error!',
+                error: {
+                    code: 403,
+                    description: `${err.details[0].path} : ${err.details[0].message}`,
+                },
             });
         }
         else {
@@ -90,62 +158,18 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Could not update user!',
-            error,
-        });
-    }
-});
-const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield user_service_1.UserServices.getAllUsersFromDB();
-        res.status(200).json({
-            success: true,
-            message: 'Users fetched successfully!',
-            data: response,
-        });
-    }
-    catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get users!',
-            error,
-        });
-    }
-});
-const getUserByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userId = req.params.userId;
-        const response = yield user_service_1.UserServices.getUserByIDFromDB(Number(userId));
-        if (response) {
-            const _a = response === null || response === void 0 ? void 0 : response._doc, { orders, password, _id } = _a, data = __rest(_a, ["orders", "password", "_id"]);
-            res.status(200).json({
-                success: true,
-                message: 'User fetched successfully!',
-                data: data,
-            });
-        }
-        else {
-            res.status(404).json({
-                success: false,
-                message: 'User not found',
-                error: {
-                    code: 404,
-                    description: 'User not found!',
-                },
-            });
-        }
-    }
-    catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'User not found',
-            error,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_f = error === null || error === void 0 ? void 0 : error.message) !== null && _f !== void 0 ? _f : 'There was an error updating user.',
+            },
         });
     }
 });
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _g, _h;
     try {
-        const userId = req.params.userId;
+        const userId = (_g = req.params) === null || _g === void 0 ? void 0 : _g.userId;
         const response = yield user_service_1.UserServices.deleteUserFromDB(Number(userId));
         if ((response === null || response === void 0 ? void 0 : response.deletedCount) === 1) {
             res.json({
@@ -168,8 +192,129 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Could not delete User',
-            error,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_h = error === null || error === void 0 ? void 0 : error.message) !== null && _h !== void 0 ? _h : 'There was an error deleting the user.',
+            },
+        });
+    }
+});
+const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _j, _k;
+    try {
+        const userId = (_j = req.params) === null || _j === void 0 ? void 0 : _j.userId;
+        const orderData = req.body;
+        const zodParse = user_validation_1.orderValidationSchema.safeParse(orderData);
+        if (!zodParse.success) {
+            const err = (0, zod_validation_error_1.fromZodError)(zodParse.error);
+            res.status(403).json({
+                success: false,
+                message: 'Validation Error!',
+                error: {
+                    code: 403,
+                    description: `${err.details[0].path} : ${err.details[0].message}`,
+                },
+            });
+        }
+        else {
+            const response = yield user_service_1.UserServices.createOrderInDB(Number(userId), zodParse.data);
+            if (response) {
+                res.status(200).json({
+                    success: true,
+                    message: 'Order created successfully!',
+                    data: null,
+                });
+            }
+            else {
+                res.status(404).json({
+                    success: false,
+                    message: 'User not found',
+                    error: {
+                        code: 404,
+                        description: 'User not found!',
+                    },
+                });
+            }
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_k = error === null || error === void 0 ? void 0 : error.message) !== null && _k !== void 0 ? _k : 'There was an error creating order.',
+            },
+        });
+    }
+});
+const getAllOrdersOfUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _l, _m;
+    try {
+        const userId = (_l = req.params) === null || _l === void 0 ? void 0 : _l.userId;
+        const response = yield user_service_1.UserServices.getAllOrdersOfUserFromDB(Number(userId));
+        if (response) {
+            res.status(200).json({
+                success: true,
+                message: 'Order fetched successfully!',
+                data: response,
+            });
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'User not found',
+                error: {
+                    code: 404,
+                    description: 'User not found!',
+                },
+            });
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_m = error === null || error === void 0 ? void 0 : error.message) !== null && _m !== void 0 ? _m : "There was an error fetching user's orders.",
+            },
+        });
+    }
+});
+const getUsersTotalOrderPrice = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _o, _p;
+    try {
+        const userId = req.params.userId;
+        const response = yield user_service_1.UserServices.getAllOrdersOfUserFromDB(Number(userId));
+        if (response) {
+            const totalPrice = (_o = response === null || response === void 0 ? void 0 : response.orders) === null || _o === void 0 ? void 0 : _o.reduce((prev, next) => prev + next.price * next.quantity, 0);
+            res.status(200).json({
+                success: true,
+                message: 'Total price calculated successfully!',
+                data: { totalPrice },
+            });
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'User not found',
+                error: {
+                    code: 404,
+                    description: 'User not found!',
+                },
+            });
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error.',
+            error: {
+                code: 500,
+                description: (_p = error === null || error === void 0 ? void 0 : error.message) !== null && _p !== void 0 ? _p : 'There was an error calculating total price.',
+            },
         });
     }
 });
@@ -179,4 +324,7 @@ exports.UserControllers = {
     getUserByID,
     updateUser,
     deleteUser,
+    createOrder,
+    getAllOrdersOfUser,
+    getUsersTotalOrderPrice,
 };

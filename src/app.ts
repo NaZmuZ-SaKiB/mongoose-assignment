@@ -2,7 +2,7 @@ import express, { Request, Response, Application } from 'express';
 import cors from 'cors';
 
 // Local Imports
-import userRouter from './app/modules/user.route';
+import userRouter from './app/modules/user/user.route';
 
 const app: Application = express();
 
