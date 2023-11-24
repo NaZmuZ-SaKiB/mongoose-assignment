@@ -25,8 +25,7 @@ const createUser = async (req: Request, res: Response) => {
         },
       });
     } else {
-      const response: any = await UserServices.postUserToDB(zodParse.data);
-      delete response?._doc.orders;
+      const response = await UserServices.postUserToDB(zodParse.data);
 
       res.status(200).json({
         success: true,
@@ -35,14 +34,28 @@ const createUser = async (req: Request, res: Response) => {
       });
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error creating new user.',
-      },
-    });
+    if (error.code === 11000) {
+      res.status(500).json({
+        success: false,
+        message: `${Object.keys(error.keyPattern)[0]} must be unique.`,
+        error: {
+          code: 500,
+          description: `${Object.keys(error.keyPattern)[0]} : ${
+            Object.values(error.keyValue)[0]
+          } already exists.`,
+        },
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Internal Server Error.',
+        error: {
+          code: 500,
+          description:
+            error?.message ?? 'There was an error creating new user.',
+        },
+      });
+    }
   }
 };
 
