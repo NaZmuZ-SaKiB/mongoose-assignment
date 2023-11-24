@@ -51,9 +51,19 @@ const getUserByIDFromDB = (userId) => __awaiter(void 0, void 0, void 0, function
     const user = yield user_model_1.User.userExists(userId);
     return user;
 });
+const deleteUserFromDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (isNaN(userId))
+        return null;
+    const user = yield user_model_1.User.userExists(userId);
+    if (!user)
+        return null;
+    const response = yield user_model_1.User.deleteOne({ userId });
+    return response;
+});
 exports.UserServices = {
     postUserToDB,
     getAllUsersFromDB,
     getUserByIDFromDB,
     updateUserInDB,
+    deleteUserFromDB,
 };

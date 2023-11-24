@@ -17,4 +17,14 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to mongoose assignment server !');
 });
 
+app.all('*', (req: Request, res: Response) => {
+  res.status(400).json({
+    success: false,
+    message: 'Route Not Found!',
+    error: {
+      code: 404,
+      description: `The route ${req.originalUrl} does not exist`,
+    },
+  });
+});
 export default app;

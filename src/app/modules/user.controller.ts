@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import { fromZodError } from 'zod-validation-error';
 
 import { UserServices } from './user.service';
-import { TUser } from './user.interface';
+import { TOrder, TUpdateUser, TUser } from './user.interface';
 import {
+  orderValidationSchema,
   userUpdateValidationSchema,
   userValidationSchema,
 } from './user.validation';
@@ -15,13 +16,17 @@ const createUser = async (req: Request, res: Response) => {
 
     if (!zodParse.success) {
       const err = fromZodError(zodParse.error);
-      res.status(500).json({
+      res.status(403).json({
         success: false,
-        message: `${err.details[0].path} : ${err.details[0].message}`,
-        error: 'Validation Error!',
+        message: 'Validation Error!',
+        error: {
+          code: 403,
+          description: `${err.details[0].path} : ${err.details[0].message}`,
+        },
       });
     } else {
-      const response = await UserServices.postUserToDB(zodParse.data);
+      const response: any = await UserServices.postUserToDB(zodParse.data);
+      delete response?._doc.orders;
 
       res.status(200).json({
         success: true,
@@ -32,8 +37,67 @@ const createUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'Failed to create user!',
-      error,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error creating new user.',
+      },
+    });
+  }
+};
+
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const response = await UserServices.getAllUsersFromDB();
+
+    res.status(200).json({
+      success: true,
+      message: 'Users fetched successfully!',
+      data: response,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error fetching users.',
+      },
+    });
+  }
+};
+
+const getUserByID = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+
+    const response: any = await UserServices.getUserByIDFromDB(Number(userId));
+    if (response) {
+      delete response?._doc.orders;
+
+      res.status(200).json({
+        success: true,
+        message: 'User fetched successfully!',
+        data: response,
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error fetching user.',
+      },
     });
   }
 };
@@ -41,15 +105,18 @@ const createUser = async (req: Request, res: Response) => {
 const updateUser = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
-    const userData: TUser = req.body;
+    const userData: TUpdateUser = req.body;
 
     const zodParse = userUpdateValidationSchema.safeParse(userData);
     if (!zodParse.success) {
       const err = fromZodError(zodParse.error);
-      res.status(500).json({
+      res.status(403).json({
         success: false,
-        message: `${err.details[0].path} : ${err.details[0].message}`,
-        error: 'Validation Error!',
+        message: 'Validation Error!',
+        error: {
+          code: 403,
+          description: `${err.details[0].path} : ${err.details[0].message}`,
+        },
       });
     } else {
       const response = await UserServices.updateUserInDB(
@@ -74,61 +141,14 @@ const updateUser = async (req: Request, res: Response) => {
         });
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'Could not update user!',
-      error,
-    });
-  }
-};
-
-const getAllUsers = async (req: Request, res: Response) => {
-  try {
-    const response = await UserServices.getAllUsersFromDB();
-
-    res.status(200).json({
-      success: true,
-      message: 'Users fetched successfully!',
-      data: response,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get users!',
-      error,
-    });
-  }
-};
-
-const getUserByID = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-
-    const response: any = await UserServices.getUserByIDFromDB(Number(userId));
-    if (response) {
-      const { orders, password, _id, ...data } = response?._doc;
-
-      res.status(200).json({
-        success: true,
-        message: 'User fetched successfully!',
-        data: data,
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: 'User not found',
-        error: {
-          code: 404,
-          description: 'User not found!',
-        },
-      });
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'User not found',
-      error,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error updating user.',
+      },
     });
   }
 };
@@ -153,11 +173,141 @@ const deleteUser = async (req: Request, res: Response) => {
         },
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'Could not delete User',
-      error,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error deleting the user.',
+      },
+    });
+  }
+};
+
+const createOrder = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const orderData: TOrder = req.body;
+
+    const zodParse = orderValidationSchema.safeParse(orderData);
+    if (!zodParse.success) {
+      const err = fromZodError(zodParse.error);
+      res.status(403).json({
+        success: false,
+        message: 'Validation Error!',
+        error: {
+          code: 403,
+          description: `${err.details[0].path} : ${err.details[0].message}`,
+        },
+      });
+    } else {
+      const response = await UserServices.createOrderInDB(
+        Number(userId),
+        zodParse.data,
+      );
+
+      if (response) {
+        res.status(200).json({
+          success: true,
+          message: 'Order created successfully!',
+          data: null,
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+          error: {
+            code: 404,
+            description: 'User not found!',
+          },
+        });
+      }
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description: error?.message ?? 'There was an error creating order.',
+      },
+    });
+  }
+};
+
+const getAllOrdersOfUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const response = await UserServices.getAllOrdersOfUserFromDB(
+      Number(userId),
+    );
+
+    if (response) {
+      res.status(200).json({
+        success: true,
+        message: 'Order fetched successfully!',
+        data: response,
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description:
+          error?.message ?? "There was an error fetching user's orders.",
+      },
+    });
+  }
+};
+
+const getUsersTotalOrderPrice = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const response = await UserServices.getUsersTotalOrderPriceFromDB(
+      Number(userId),
+    );
+
+    if (response) {
+      const totalPrice = response?.orders?.reduce(
+        (prev, next: TOrder) => prev + next.price * next.quantity,
+        0,
+      );
+      res.status(200).json({
+        success: true,
+        message: 'Total price calculated successfully!',
+        data: { totalPrice },
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+        error: {
+          code: 404,
+          description: 'User not found!',
+        },
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error.',
+      error: {
+        code: 500,
+        description:
+          error?.message ?? 'There was an error calculating total price.',
+      },
     });
   }
 };
@@ -168,4 +318,7 @@ export const UserControllers = {
   getUserByID,
   updateUser,
   deleteUser,
+  createOrder,
+  getAllOrdersOfUser,
+  getUsersTotalOrderPrice,
 };

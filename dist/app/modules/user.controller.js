@@ -143,9 +143,40 @@ const getUserByID = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
 });
+const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.params.userId;
+        const response = yield user_service_1.UserServices.deleteUserFromDB(Number(userId));
+        if ((response === null || response === void 0 ? void 0 : response.deletedCount) === 1) {
+            res.json({
+                success: true,
+                message: 'User deleted successfully!',
+                data: null,
+            });
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'User not found',
+                error: {
+                    code: 404,
+                    description: 'User not found!',
+                },
+            });
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Could not delete User',
+            error,
+        });
+    }
+});
 exports.UserControllers = {
     createUser,
     getAllUsers,
     getUserByID,
     updateUser,
+    deleteUser,
 };
