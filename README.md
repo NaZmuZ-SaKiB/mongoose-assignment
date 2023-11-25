@@ -53,11 +53,11 @@ This is a **Node JS** backend server built using **Express Js**. Here I have use
 1. Build the project first.
 2. Install Vercel CLI:
 
-- `npm i -g vercel` or `yarn global add vercel`
+   - `npm i -g vercel` or `yarn global add vercel`
 
 3. Log in to vercel:
 
-- `vercel login`
+   - `vercel login`
 
 4. For first time deploy run `vercel` command and select your preferred options.
 5. For next deploys:
