@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { fromZodError } from 'zod-validation-error';
 
 import { UserServices } from './user.service';
 import { TOrder, TUpdateUser, TUser } from './user.interface';
@@ -8,6 +7,7 @@ import {
   userUpdateValidationSchema,
   userValidationSchema,
 } from './user.validation';
+import ErrorHandle from '../../../utils/ErrorHandle';
 
 const createUser = async (req: Request, res: Response) => {
   try {
@@ -15,15 +15,15 @@ const createUser = async (req: Request, res: Response) => {
     const zodParse = userValidationSchema.safeParse(user);
 
     if (!zodParse.success) {
-      const err = fromZodError(zodParse.error);
-      res.status(403).json({
-        success: false,
-        message: 'Validation Error!',
-        error: {
-          code: 403,
-          description: `${err.details[0].path} : ${err.details[0].message}`,
-        },
-      });
+      const { code, message, path } = zodParse.error.issues[0];
+      // Custom Error Handle Function ErrorHandle(res, error, code, message, description)
+      ErrorHandle(
+        res,
+        null,
+        403,
+        'Validation Error!',
+        `${code} ${path[0]}. ${message}`,
+      );
     } else {
       const response: any = await UserServices.postUserToDB(zodParse.data);
       delete response?._doc?.orders;
@@ -35,28 +35,13 @@ const createUser = async (req: Request, res: Response) => {
       });
     }
   } catch (error: any) {
-    if (error.code === 11000) {
-      res.status(500).json({
-        success: false,
-        message: `${Object.keys(error.keyPattern)[0]} must be unique.`,
-        error: {
-          code: 500,
-          description: `${Object.keys(error.keyPattern)[0]} : ${
-            Object.values(error.keyValue)[0]
-          } already exists.`,
-        },
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error.',
-        error: {
-          code: 500,
-          description:
-            error?.message ?? 'There was an error creating new user.',
-        },
-      });
-    }
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error!',
+      'There was an error creating new User',
+    );
   }
 };
 
@@ -70,14 +55,13 @@ const getAllUsers = async (req: Request, res: Response) => {
       data: response,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error fetching users.',
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error fetching users.',
+    );
   }
 };
 
@@ -96,24 +80,22 @@ const getUserByID = async (req: Request, res: Response) => {
         data: response,
       });
     } else {
-      res.status(404).json({
-        success: false,
-        message: 'User not found',
-        error: {
-          code: 404,
-          description: 'User not found!',
-        },
-      });
+      ErrorHandle(
+        res,
+        null,
+        404,
+        'User not found',
+        `There is no user with userId: ${userId}.`,
+      );
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error fetching user.',
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error fetching user.',
+    );
   }
 };
 
@@ -124,15 +106,15 @@ const updateUser = async (req: Request, res: Response) => {
 
     const zodParse = userUpdateValidationSchema.safeParse(userData);
     if (!zodParse.success) {
-      const err = fromZodError(zodParse.error);
-      res.status(403).json({
-        success: false,
-        message: 'Validation Error!',
-        error: {
-          code: 403,
-          description: `${err.details[0].path} : ${err.details[0].message}`,
-        },
-      });
+      const { code, message, path } = zodParse.error.issues[0];
+
+      ErrorHandle(
+        res,
+        null,
+        403,
+        'Validation Error!',
+        `${code} ${path[0]}. ${message}`,
+      );
     } else {
       const response = await UserServices.updateUserInDB(
         Number(userId),
@@ -146,39 +128,23 @@ const updateUser = async (req: Request, res: Response) => {
           data: response,
         });
       } else {
-        res.status(404).json({
-          success: false,
-          message: 'User not found',
-          error: {
-            code: 404,
-            description: 'User not found!',
-          },
-        });
+        ErrorHandle(
+          res,
+          null,
+          404,
+          'User not found',
+          `There is no user with userId: ${userId}.`,
+        );
       }
     }
   } catch (error: any) {
-    if (error.code === 11000) {
-      res.status(500).json({
-        success: false,
-        message: `${Object.keys(error.keyPattern)[0]} must be unique.`,
-        error: {
-          code: 500,
-          description: `${Object.keys(error.keyPattern)[0]} : ${
-            Object.values(error.keyValue)[0]
-          } already exists.`,
-        },
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error.',
-        error: {
-          code: 500,
-          description: error?.message ?? 'There was an error updating user.',
-        },
-        err: error,
-      });
-    }
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error updating user.',
+    );
   }
 };
 
@@ -186,6 +152,7 @@ const deleteUser = async (req: Request, res: Response) => {
   try {
     const userId = req.params?.userId;
     const response = await UserServices.deleteUserFromDB(Number(userId));
+
     if (response?.deletedCount === 1) {
       res.json({
         success: true,
@@ -193,24 +160,22 @@ const deleteUser = async (req: Request, res: Response) => {
         data: null,
       });
     } else {
-      res.status(404).json({
-        success: false,
-        message: 'User not found',
-        error: {
-          code: 404,
-          description: 'User not found!',
-        },
-      });
+      ErrorHandle(
+        res,
+        null,
+        404,
+        'User not found',
+        `There is no user with userId: ${userId}.`,
+      );
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error deleting the user.',
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error deleting the user.',
+    );
   }
 };
 
@@ -220,16 +185,17 @@ const createOrder = async (req: Request, res: Response) => {
     const orderData: TOrder = req.body;
 
     const zodParse = orderValidationSchema.safeParse(orderData);
+
     if (!zodParse.success) {
-      const err = fromZodError(zodParse.error);
-      res.status(403).json({
-        success: false,
-        message: 'Validation Error!',
-        error: {
-          code: 403,
-          description: `${err.details[0].path} : ${err.details[0].message}`,
-        },
-      });
+      const { code, message, path } = zodParse.error.issues[0];
+
+      ErrorHandle(
+        res,
+        null,
+        403,
+        'Validation Error!',
+        `${code} ${path[0]}. ${message}`,
+      );
     } else {
       const response = await UserServices.createOrderInDB(
         Number(userId),
@@ -243,25 +209,23 @@ const createOrder = async (req: Request, res: Response) => {
           data: null,
         });
       } else {
-        res.status(404).json({
-          success: false,
-          message: 'User not found',
-          error: {
-            code: 404,
-            description: 'User not found!',
-          },
-        });
+        ErrorHandle(
+          res,
+          null,
+          404,
+          'User not found',
+          `There is no user with userId: ${userId}.`,
+        );
       }
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error creating order.',
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error creating order.',
+    );
   }
 };
 
@@ -279,65 +243,56 @@ const getAllOrdersOfUser = async (req: Request, res: Response) => {
         data: response,
       });
     } else {
-      res.status(404).json({
-        success: false,
-        message: 'User not found',
-        error: {
-          code: 404,
-          description: 'User not found!',
-        },
-      });
+      ErrorHandle(
+        res,
+        null,
+        404,
+        'User not found',
+        `There is no user with userId: ${userId}.`,
+      );
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description:
-          error?.message ?? "There was an error fetching user's orders.",
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      "There was an error fetching user's orders.",
+    );
   }
 };
 
 const getUsersTotalOrderPrice = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
-    const response = await UserServices.getAllOrdersOfUserFromDB(
+    const response = await UserServices.getTotalPriceOfAllOrdersOfUserFromDB(
       Number(userId),
     );
 
     if (response) {
-      const totalPrice = response?.orders?.reduce(
-        (prev, next: TOrder) => prev + next.price * next.quantity,
-        0,
-      );
+      delete response?._id;
       res.status(200).json({
         success: true,
         message: 'Total price calculated successfully!',
-        data: { totalPrice },
+        data: response,
       });
     } else {
-      res.status(404).json({
-        success: false,
-        message: 'User not found',
-        error: {
-          code: 404,
-          description: 'User not found!',
-        },
-      });
+      ErrorHandle(
+        res,
+        null,
+        404,
+        'User not found',
+        `There is no user with userId: ${userId}.`,
+      );
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description:
-          error?.message ?? 'There was an error calculating total price.',
-      },
-    });
+    ErrorHandle(
+      res,
+      error,
+      500,
+      'Internal Server Error.',
+      'There was an error calculating total price.',
+    );
   }
 };
 

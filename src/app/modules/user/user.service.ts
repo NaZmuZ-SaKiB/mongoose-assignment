@@ -66,13 +66,21 @@ const createOrderInDB = async (userId: number, orderData: TOrder) => {
   const userExists: TUser | null = await User.userExists(userId);
   if (!userExists) return null;
 
-  const response = await User.findOneAndUpdate(
-    { userId },
-    { $push: { orders: orderData } },
-    { new: true, runValidators: true },
-  );
-
-  return response;
+  if (!userExists?.orders) {
+    const response = await User.findOneAndUpdate(
+      { userId },
+      { $set: { orders: [orderData] } },
+      { new: true, runValidators: true },
+    );
+    return response;
+  } else {
+    const response = await User.findOneAndUpdate(
+      { userId },
+      { $push: { orders: orderData } },
+      { new: true, runValidators: true },
+    );
+    return response;
+  }
 };
 
 const getAllOrdersOfUserFromDB = async (userId: number) => {
@@ -90,6 +98,29 @@ const getAllOrdersOfUserFromDB = async (userId: number) => {
   return response;
 };
 
+const getTotalPriceOfAllOrdersOfUserFromDB = async (userId: number) => {
+  if (isNaN(userId)) return null;
+
+  const userExists: TUser | null = await User.userExists(userId);
+  if (!userExists) return null;
+
+  const response = await User.aggregate([
+    { $match: { userId } },
+    { $unwind: '$orders' },
+    {
+      $project: {
+        totalPricePerOrder: {
+          $multiply: ['$orders.price', '$orders.quantity'], // Calculate Each Order (price * quantity)
+        },
+      },
+    },
+    { $group: { _id: '$orders', totalPrice: { $sum: '$totalPricePerOrder' } } }, // Total Order
+  ]);
+
+  if (!response.length) return { totalPrice: 0 };
+  return response[0];
+};
+
 export const UserServices = {
   postUserToDB,
   getAllUsersFromDB,
@@ -98,4 +129,5 @@ export const UserServices = {
   deleteUserFromDB,
   createOrderInDB,
   getAllOrdersOfUserFromDB,
+  getTotalPriceOfAllOrdersOfUserFromDB,
 };

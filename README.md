@@ -70,13 +70,13 @@ This is a **Node JS** backend server built using **Express Js**. Here I have use
 {
     "userId": "number",
     "username": "string",
-    "password": "string",
     "fullName": {
         "firstName": "string",
         "lastName": "string"
     },
     "age": "number",
     "email": "string",
+    "password": "string",
     "isActive": "boolean",
     "hobbies": [
         "string",
