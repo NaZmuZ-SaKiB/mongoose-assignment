@@ -25,7 +25,8 @@ const createUser = async (req: Request, res: Response) => {
         },
       });
     } else {
-      const response = await UserServices.postUserToDB(zodParse.data);
+      const response: any = await UserServices.postUserToDB(zodParse.data);
+      delete response?._doc?.orders;
 
       res.status(200).json({
         success: true,
@@ -86,7 +87,8 @@ const getUserByID = async (req: Request, res: Response) => {
 
     const response: any = await UserServices.getUserByIDFromDB(Number(userId));
     if (response) {
-      delete response?._doc.orders;
+      delete response?._doc?.orders;
+      delete response?._doc?._id;
 
       res.status(200).json({
         success: true,
@@ -155,14 +157,28 @@ const updateUser = async (req: Request, res: Response) => {
       }
     }
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error.',
-      error: {
-        code: 500,
-        description: error?.message ?? 'There was an error updating user.',
-      },
-    });
+    if (error.code === 11000) {
+      res.status(500).json({
+        success: false,
+        message: `${Object.keys(error.keyPattern)[0]} must be unique.`,
+        error: {
+          code: 500,
+          description: `${Object.keys(error.keyPattern)[0]} : ${
+            Object.values(error.keyValue)[0]
+          } already exists.`,
+        },
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Internal Server Error.',
+        error: {
+          code: 500,
+          description: error?.message ?? 'There was an error updating user.',
+        },
+        err: error,
+      });
+    }
   }
 };
 

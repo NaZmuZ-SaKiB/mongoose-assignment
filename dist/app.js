@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 // Local Imports
-const user_route_1 = __importDefault(require("./app/modules/user.route"));
+const user_route_1 = __importDefault(require("./app/modules/user/user.route"));
 const app = (0, express_1.default)();
 // Parsers
 app.use(express_1.default.json());
