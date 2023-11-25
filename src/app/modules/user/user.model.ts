@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 
+// Local Imports
 import { TAddress, TName, TOrder, TUser, UserModel } from './user.interface';
 import config from '../../config';
 
@@ -18,7 +19,7 @@ const nameSchema = new Schema<TName>(
     },
   },
   {
-    _id: false,
+    _id: false, // This will hide _id field at response
   },
 );
 
@@ -109,19 +110,18 @@ const userSchema = new Schema<TUser, UserModel>(
     },
     orders: {
       type: [orderSchema],
-      required: false,
     },
   },
   {
     toJSON: {
       transform(doc, ret) {
-        delete ret.password;
+        delete ret.password; // Hides password field at response
       },
     },
   },
 );
 
-// Pre middlewares
+// Password hashing using pre middleware
 userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(
     this.password,
@@ -130,7 +130,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Static Method
+// Static Method to find user
 userSchema.statics.userExists = async function (userId: number) {
   const existingUser = await User.findOne({ userId });
   return existingUser;

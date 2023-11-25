@@ -107,5 +107,5 @@ export const userValidationSchema = z.object({
   orders: z.array(orderValidationSchema).optional(),
 });
 
-// Update validation
+// Update User validation Schema (makes all the field optional)
 export const userUpdateValidationSchema = userValidationSchema.partial();

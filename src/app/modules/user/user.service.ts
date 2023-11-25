@@ -66,6 +66,7 @@ const createOrderInDB = async (userId: number, orderData: TOrder) => {
   const userExists: TUser | null = await User.userExists(userId);
   if (!userExists) return null;
 
+  // If orders field does not exist then create new orders field
   if (!userExists?.orders) {
     const response = await User.findOneAndUpdate(
       { userId },
@@ -73,7 +74,9 @@ const createOrderInDB = async (userId: number, orderData: TOrder) => {
       { new: true, runValidators: true },
     );
     return response;
-  } else {
+  }
+  // If orders field already exist then push new order
+  else {
     const response = await User.findOneAndUpdate(
       { userId },
       { $push: { orders: orderData } },
@@ -83,7 +86,7 @@ const createOrderInDB = async (userId: number, orderData: TOrder) => {
   }
 };
 
-const getAllOrdersOfUserFromDB = async (userId: number) => {
+const allOrdersOfUserFromDB = async (userId: number) => {
   if (isNaN(userId)) return null;
 
   const userExists: TUser | null = await User.userExists(userId);
@@ -98,15 +101,15 @@ const getAllOrdersOfUserFromDB = async (userId: number) => {
   return response;
 };
 
-const getTotalPriceOfAllOrdersOfUserFromDB = async (userId: number) => {
+const totalPriceOfOrdersOfUserFromDB = async (userId: number) => {
   if (isNaN(userId)) return null;
 
   const userExists: TUser | null = await User.userExists(userId);
   if (!userExists) return null;
 
   const response = await User.aggregate([
-    { $match: { userId } },
-    { $unwind: '$orders' },
+    { $match: { userId } }, // Find the user
+    { $unwind: '$orders' }, // Create a document for each order
     {
       $project: {
         totalPricePerOrder: {
@@ -117,7 +120,7 @@ const getTotalPriceOfAllOrdersOfUserFromDB = async (userId: number) => {
     { $group: { _id: '$orders', totalPrice: { $sum: '$totalPricePerOrder' } } }, // Total Order
   ]);
 
-  if (!response.length) return { totalPrice: 0 };
+  if (!response.length) return { totalPrice: 0 }; // If no orders send totalPrice 0
   return response[0];
 };
 
@@ -128,6 +131,6 @@ export const UserServices = {
   updateUserInDB,
   deleteUserFromDB,
   createOrderInDB,
-  getAllOrdersOfUserFromDB,
-  getTotalPriceOfAllOrdersOfUserFromDB,
+  allOrdersOfUserFromDB,
+  totalPriceOfOrdersOfUserFromDB,
 };

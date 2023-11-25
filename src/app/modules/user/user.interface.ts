@@ -30,6 +30,7 @@ export type TUser = {
   orders?: TOrder[];
 };
 
+// Prtial interface to make all fields optional. Need to validate update user data.
 export type TUpdateUser = Partial<TUser>;
 
 export interface UserModel extends Model<TUser> {

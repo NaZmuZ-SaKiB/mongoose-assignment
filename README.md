@@ -1,6 +1,6 @@
 # Node Express Mongoose Server With TypeScript
 
-This is a **Node JS** backend server built using **Express Js**. Here I have used **Mongoose** as ODM Library. Also I have used **Zod** and **Zod-Validation-Error** package to validate input data and show customized error messages on validation errors. All the codes in this project are written in **TypeScript**. I have utilized **Eslint** for better linting and **Prettier** for better code formating to make code readable.
+This is a **Node JS** backend server built using **Express Js**. Here I have used **Mongoose** as ODM Library. Also I have used **Zod** package to validate input data and show customized error messages on validation errors. All the codes in this project are written in **TypeScript**. I have utilized **Eslint** for better linting and **Prettier** for better code formating to make code readable.
 
 ## Run the project in your local mechine
 
